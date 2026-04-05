@@ -200,3 +200,16 @@ ACTIVITY_MAP = {
     'TRADED': 244
 }
 
+TRANSACTION_TYPES = {
+    'DRAFT',
+    'TRADE_ACCEPT',
+    'WAIVER',
+    'TRADE_VETO',
+    'FUTURE_ROSTER',
+    'ROSTER',
+    'RETRO_ROSTER',
+    'TRADE_PROPOSAL',
+    'TRADE_UPHOLD',
+    'FREEAGENT',
+    'WAIVER_ERROR',
+}

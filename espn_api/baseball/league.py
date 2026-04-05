@@ -2,7 +2,7 @@ import datetime
 import time
 import json
 import math
-from typing import List, Tuple, Union
+from typing import List, Set, Tuple, Union
 
 from ..base_league import BaseLeague
 from .team import Team
@@ -10,7 +10,8 @@ from .player import Player
 from .matchup import Matchup
 from .box_score import BoxScore, H2HCategoryBoxScore, H2HPointsBoxScore
 from .activity import Activity
-from .constant import POSITION_MAP, ACTIVITY_MAP
+from .transaction import Transaction
+from .constant import POSITION_MAP, ACTIVITY_MAP, TRANSACTION_TYPES
 
 class League(BaseLeague):
     '''Creates a League instance for Public/Private ESPN league'''
@@ -100,6 +101,28 @@ class League(BaseLeague):
         activity = [Activity(topic, self.player_map, self.get_team_data) for topic in data]
 
         return activity
+
+    def transactions(self, scoring_period: int = None, types: Set[str] = {'FREEAGENT', 'WAIVER', 'WAIVER_ERROR'}) -> List[Transaction]:
+        '''Returns a list of transactions for a given scoring period'''
+        if self.year < 2019:
+            raise Exception('Cant use transactions before 2019')
+        if not scoring_period:
+            scoring_period = self.scoringPeriodId
+
+        if types > TRANSACTION_TYPES:
+            raise Exception('Invalid transaction type')
+
+        params = {
+            'view': 'mTransactions2',
+            'scoringPeriodId': scoring_period,
+        }
+        filters = {'transactions': {'filterType': {'value': list(types)}}}
+        headers = {'x-fantasy-filter': json.dumps(filters)}
+
+        data = self.espn_request.league_get(params=params, headers=headers)
+        if 'transactions' not in data:
+            return []
+        return [Transaction(t, self.player_map, self.get_team_data) for t in data['transactions']]
 
     def free_agents(self, week: int=None, size: int=50, position: str=None, position_id: int=None) -> List[Player]:
         '''Returns a List of Free Agents for a Given Week\n

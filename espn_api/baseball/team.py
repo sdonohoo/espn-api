@@ -1,4 +1,3 @@
-import pdb
 from .player import Player
 from .matchup import Matchup
 from .constant import STATS_MAP
@@ -16,6 +15,11 @@ class Team(object):
         self.wins = data['record']['overall']['wins']
         self.losses = data['record']['overall']['losses']
         self.ties = data['record']['overall']['ties']
+        self.acquisitions = data.get('transactionCounter', {}).get('acquisitions', 0)
+        self.acquisition_budget_spent = data.get('transactionCounter', {}).get('acquisitionBudgetSpent', 0)
+        self.drops = data.get('transactionCounter', {}).get('drops', 0)
+        self.trades = data.get('transactionCounter', {}).get('trades', 0)
+        self.move_to_ir = data.get('transactionCounter', {}).get('moveToIR', 0)
         self.logo_url = ''
         self.standing = data['playoffSeed']
         self.final_standing = data.get('rankFinal') or data.get('rankCalculatedFinal')
