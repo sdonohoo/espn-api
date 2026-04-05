@@ -35,7 +35,7 @@ class BoxScore(ABC):
 
 class H2HCategoryBoxScore(BoxScore):
     '''Boxscore class for head to head categories leagues'''
-    def __init__(self, data, pro_schedule, year, scoring_period = 0):
+    def __init__(self, data, pro_schedule, year, scoring_period=0, probable_pitchers=None):
         super().__init__(data)
 
     def _process_team(self, team_data, is_home_team):
@@ -69,18 +69,18 @@ class H2HCategoryBoxScore(BoxScore):
 
 class H2HPointsBoxScore(BoxScore):
     '''Boxscore class for head to head points leagues'''
-    def __init__(self, data, pro_schedule, year, scoring_period = 0):
+    def __init__(self, data, pro_schedule, year, scoring_period=0, probable_pitchers=None):
         super().__init__(data)
 
-        (self.home_team, self.home_score, self.home_projected, self.home_lineup) = self._get_team_data('home', data, pro_schedule, scoring_period, year)
+        (self.home_team, self.home_score, self.home_projected, self.home_lineup) = self._get_team_data('home', data, pro_schedule, scoring_period, year, probable_pitchers)
 
-        (self.away_team, self.away_score, self.away_projected, self.away_lineup) = self._get_team_data('away', data, pro_schedule, scoring_period, year)
+        (self.away_team, self.away_score, self.away_projected, self.away_lineup) = self._get_team_data('away', data, pro_schedule, scoring_period, year, probable_pitchers)
 
     def _process_team(self, team_data, is_home_team):
         super()._process_team(team_data, is_home_team)
         # TODO implement setting the scores
 
-    def _get_team_data(self, team, data, pro_schedule, week, year):
+    def _get_team_data(self, team, data, pro_schedule, week, year, probable_pitchers=None):
       if team not in data:
         return (0, 0, -1, [])
 
@@ -92,6 +92,6 @@ class H2HPointsBoxScore(BoxScore):
       else:
         team_score = round(data[team]['totalPoints'], 2)
       team_roster = data[team].get('rosterForCurrentScoringPeriod', {}).get('entries', [])
-      team_lineup = [BoxPlayer(player, pro_schedule, week, year) for player in team_roster]
+      team_lineup = [BoxPlayer(player, pro_schedule, week, year, probable_pitchers) for player in team_roster]
 
       return (team_id, team_score, team_projected, team_lineup)

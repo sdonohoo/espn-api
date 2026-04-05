@@ -174,9 +174,10 @@ class League(BaseLeague):
         headers = {'x-fantasy-filter': json.dumps(filters)}
         data = self.espn_request.league_get(params=params, headers=headers)
         pro_schedule = self._get_pro_schedule(scoring_id)
+        probable_pitchers = self._get_probable_pitchers(scoring_id)
 
         schedule = data['schedule']
-        box_data = [self._box_score_class(matchup, pro_schedule, self.year, scoring_id) for matchup in schedule]
+        box_data = [self._box_score_class(matchup, pro_schedule, self.year, scoring_id, probable_pitchers) for matchup in schedule]
 
         for team in self.teams:
             for matchup in box_data:

@@ -5,10 +5,11 @@ from datetime import datetime, timedelta
 
 class BoxPlayer(Player):
     '''player with extra data from a matchup'''
-    def __init__(self, data, pro_schedule, week, year):
+    def __init__(self, data, pro_schedule, week, year, probable_pitchers=None):
         super(BoxPlayer, self).__init__(data, year)
         self.slot_position = 'FA'
         self.pro_opponent = "None" # professional team playing against
+        self.probable_pitcher = None # confirmed opposing SP name, or None
         self.pro_pos_rank = 0 # rank of professional team against player position
         self.game_played = 100 # 0-100 for percent of game played
         self.on_bye_week = False
@@ -22,6 +23,8 @@ class BoxPlayer(Player):
             self.game_date = datetime.fromtimestamp(date/1000.0)
             self.game_played = 100 if datetime.now() > self.game_date + timedelta(hours=3) else 0
             self.pro_opponent = PRO_TEAM_MAP[opp_id]
+            if probable_pitchers:
+                self.probable_pitcher = probable_pitchers.get(player['proTeamId'])
         else: # bye week
             self.on_bye_week = True
 
