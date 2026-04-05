@@ -162,7 +162,7 @@ class League(BaseLeague):
         if matchup_period and scoring_period:
             matchup_id = matchup_period
             scoring_id = scoring_period
-        elif matchup_period and matchup_period < matchup_id:
+        elif matchup_period:
             matchup_id = matchup_period
 
         params = {
