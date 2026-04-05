@@ -1,4 +1,5 @@
 from abc import ABC
+import json
 from typing import List, Tuple
 
 from .base_settings import BaseSettings
@@ -119,6 +120,48 @@ class BaseLeague(ABC):
             pro_game = team.get('proGamesByScoringPeriod', {})
             pro_team_schedule[team['id']] = pro_game
         return pro_team_schedule
+
+    def _get_probable_pitchers(self, scoring_period: int) -> dict:
+        '''Return {hitter_pro_team_id: pitcher_name} for confirmed starters in the given scoring period.
+
+        Uses starterStatusByProGame from kona_player_info cross-referenced against the pro schedule.
+        Only includes pitchers with PROBABLE or STARTING status.
+        '''
+        raw_sched = self.espn_request.get_pro_schedule()
+        game_lookup = {}
+        for team in raw_sched['settings']['proTeams']:
+            for period_str, games in team.get('proGamesByScoringPeriod', {}).items():
+                if int(period_str) != scoring_period:
+                    continue
+                for g in games:
+                    gid = g['id']
+                    if gid not in game_lookup:
+                        game_lookup[gid] = {'home': g['homeProTeamId'], 'away': g['awayProTeamId']}
+
+        filters = {
+            'players': {
+                'filterSlotIds': {'value': [13, 14, 15]},
+                'limit': 750,
+                'sortPercOwned': {'sortPriority': 1, 'sortAsc': False},
+            }
+        }
+        raw = self.espn_request.league_get(
+            params={'view': 'kona_player_info', 'scoringPeriodId': scoring_period},
+            headers={'x-fantasy-filter': json.dumps(filters)},
+        )
+
+        probable_pitchers = {}
+        for entry in raw.get('players', []):
+            p = entry['player']
+            pitcher_team = p.get('proTeamId')
+            for gid_str, status in p.get('starterStatusByProGame', {}).items():
+                gid = int(gid_str)
+                if gid in game_lookup and status in ('PROBABLE', 'STARTING'):
+                    g = game_lookup[gid]
+                    opp_team = g['away'] if pitcher_team == g['home'] else g['home']
+                    probable_pitchers[opp_team] = p['fullName']
+
+        return probable_pitchers
 
     def standings(self) -> List:
         standings = sorted(self.teams, key=lambda x: x.final_standing if x.final_standing != 0 else x.standing, reverse=False)
