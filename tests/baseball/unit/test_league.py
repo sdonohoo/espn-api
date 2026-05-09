@@ -225,6 +225,11 @@ class BoxScoresTest(TestCase):
         mock_team.team_id = 1
         self.league.teams = [mock_team]
         self.league._box_score_class = mock.Mock(return_value=mock.Mock(home_team=1, away_team=2))
+        # _get_probable_pitchers issues its own ESPN request in box_scores();
+        # stub it out for all tests in this class.
+        patcher = mock.patch.object(League, '_get_probable_pitchers', return_value={})
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     def test_raises_before_2019(self):
         with mock.patch.object(League, 'fetch_league'):
@@ -298,6 +303,11 @@ class BoxScoresRotoTest(TestCase):
         mock_team = mock.Mock()
         mock_team.team_id = 1
         self.league.teams = [mock_team]
+        # _get_probable_pitchers issues its own ESPN request in box_scores();
+        # stub it out for all tests in this class.
+        patcher = mock.patch.object(League, '_get_probable_pitchers', return_value={})
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     @mock.patch('espn_api.baseball.league.League._get_pro_schedule', return_value={})
     @mock.patch.object(EspnFantasyRequests, 'league_get')
